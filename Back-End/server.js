@@ -59,6 +59,25 @@ const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 // ---------- Routes ----------
 app.get("/api/ping", (req, res) => res.json({ ok: true }));
 
+app.get("/api/dbcheck", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    const [t] = await pool.query("SHOW TABLES");
+    res.json({
+      ok: true,
+      tables: t.map((r) => Object.values(r)[0]),
+      jwtSecretSet: Boolean(process.env.JWT_SECRET)
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      code: err.code,
+      message: err.message,
+      jwtSecretSet: Boolean(process.env.JWT_SECRET)
+    });
+  }
+});
+
 // REGISTER
 app.post("/api/auth/register", async (req, res) => {
   try {
